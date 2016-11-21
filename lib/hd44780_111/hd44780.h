@@ -44,7 +44,7 @@ Modified by: Silver Kits <silver.kits@eesti.ee> October 2016
 #define LCD_ROW_1_LAST_VISIBLE_COL  15
 #define LCD_ROW_1_LAST_COL          39
 #define LCD_ROW_2_LAST_VISIBLE_COL  79
-#define LCD_ROW_1_LAST_COL          103
+#define LCD_ROW_2_LAST_COL          103
 #define LCD_COLS_MAX                103
 #define LCD_VISIBLE_COLS            16
 

@@ -8,6 +8,7 @@ CC = avr-gcc
 OBJCOPY = avr-objcopy
 AVRDUDE = avrdude
 CODE_FORMATTER = tooling/format-code.sh
+AVRSIZE = avr-size
 
 BOARD = atmega2560
 
@@ -42,13 +43,18 @@ CFLAGS =	-Wall \
 			-Werror \
 			-Wfatal-errors \
 			-Os \
+			-flto \
+			-fdata-sections \
+			-ffunction-sections \
 			-mmcu=$(BOARD) \
 			-DF_CPU=16000000UL \
 			-DGIT_DESCR=\"$(shell git describe --abbrev=6 --dirty --always --tags --long)\" \
 			-std=c11
 
 # Linker flags
-LDFLAGS = -mmcu=$(BOARD)
+LDFLAGS =	-mmcu=$(BOARD) \
+			-flto \
+			-Wl,-gc-sections
 
 OBJCOPYARGS =	-O ihex \
 				-R .eeprom
@@ -61,6 +67,9 @@ AVRDUDEARGS =	-p $(BOARD) \
 				-b 115200 \
 				-V \
 				-D
+
+AVRSIZEARGS =	-C \
+				--mcu=$(BOARD)
 
 all: $(ELF) $(TARGET)
 
@@ -83,6 +92,9 @@ install:
 	$(AVRDUDE) $(AVRDUDEARGS) -U flash:w:$(TARGET)
 
 format:
-	$(CODE_FORMATTER) $(SRC)
+	$(CODE_FORMATTER) $(SRCDIR)/*.c
 
-.PHONY: clean install format
+size:
+	$(AVRSIZE) $(AVRSIZEARGS) $(ELF)
+
+.PHONY: clean install format size
