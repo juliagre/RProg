@@ -10,7 +10,6 @@
 
 #define BLINK_DELAY_MS 100
 
-
 int main (void)
 {
     /* Set pin 3 of PORTA for output*/
