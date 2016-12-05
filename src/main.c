@@ -8,7 +8,7 @@
 #include "hmi_msg.h"
 #include "../lib/hd44780_111/hd44780.h"
 
-#define BLINK_DELAY_MS 1000
+#define BLINK_DELAY_MS 100
 
 
 int main (void)
