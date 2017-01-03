@@ -1464,4 +1464,3 @@ void uart3_flush(void)
 #endif
 
 #endif /* defined( USART3_ENABLED ) */
-

@@ -1,5 +1,5 @@
-#ifndef _UART_H_
-#define _UART_H_
+#ifndef _UART_WRAPPER_H_
+#define _UART_WRAPPER_H_
 
 int uart0_putchar(char c, FILE *stream);
 int uart0_getchar(FILE *stream);

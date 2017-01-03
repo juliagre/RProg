@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "print_helper.h"
-#include <avr/pgmspace.h>
 
 int print_ascii_tbl (FILE *stream)
 {
@@ -12,7 +11,6 @@ int print_ascii_tbl (FILE *stream)
 
     return fprintf(stream, "\n");
 }
-
 
 int print_for_human (FILE *stream, const unsigned char *array, const int len)
 {

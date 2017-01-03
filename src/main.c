@@ -1,20 +1,25 @@
 #include <stdio.h>
 #include <avr/io.h>
 #include <util/delay.h>
-#include <util/atomic.h>
 #include <string.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include "print_helper.h"
 #include "uart-wrapper.h"
+#include <util/atomic.h>
 #include "hmi_msg.h"
 #include "../lib/hd44780_111/hd44780.h"
 #include "../lib/andygock_avr-uart/uart.h"
-
+#include "../lib/helius_microrl/microrl.h"
+#include "cli_microrl.h"
+#include <assert.h>
+#define __ASSERT_USE_STDERR
 #define BAUD 9600
-#define BLINK_DELAY_MS 100
 
 volatile uint32_t counter;
+//Create microrl object and pointer on it
+microrl_t rl;
+microrl_t *prl = &rl;
 
 static inline void init_system_clock(void)
 {
@@ -43,60 +48,20 @@ static inline void init_p()
     sei();
 }
 
-static inline void print_avr_version()
-{
-    fprintf_P(stderr, PSTR(VER_FW),
-              PSTR(GIT_DESCR), PSTR(__DATE__), PSTR(__TIME__));
-    fprintf_P(stderr, PSTR(VER_LIBC), PSTR(__AVR_LIBC_VERSION_STRING__));
-}
-
 static inline void print_user_info()
 {
     /* print and display my name*/
     fprintf_P(stdout, PSTR(STUD_NAME "\n"));
     lcd_puts_P(PSTR(STUD_NAME));
-    /*print ASCII table*/
-    print_ascii_tbl(stdout);
-    unsigned char ascii[128];
-
-    for (unsigned char i = 0; i < 128; i++) {
-        ascii[i] = i;
-    }
-
-    print_for_human(stdout, ascii, 128);
-    fprintf_P(stdout, PSTR(GET_MONTH));
-}
-
-static inline void month_info()
-{
-    char firstletter;
-    fscanf(stdin, "%c", &firstletter);
-    fprintf(stdout, "%c\n", firstletter);
-    lcd_goto(0x40);
-
-    /*find and print month */
-    for (int i = 0; i < 6; i++) {
-        if (!strncmp_P(&firstletter, (PGM_P)pgm_read_word(&nameMonths[i]), 1)) {
-            fprintf_P(stdout, (PGM_P)pgm_read_word(&nameMonths[i]));
-            fputc('\n', stdout);
-            lcd_puts_P((PGM_P)pgm_read_word(&nameMonths[i]));
-            lcd_putc(' ');
-        }
-    }
-
-    fprintf_P(stdout, PSTR(GET_MONTH));
 }
 
 static inline void heartbeat()
 {
     static uint32_t time_prev;
     uint32_t time_cpy;
-    ATOMIC_BLOCK(ATOMIC_FORCEON) {
-        time_cpy = counter;
-    }
+    time_cpy = time_prev;
 
-    if ((time_prev - time_cpy) > 0) {
-        // Toggle led on arduino pin 25
+    if (time_prev != time_cpy) {
         PORTA ^= _BV(PORTA3);
         fprintf_P(stderr, PSTR(UPTIME "\n"), time_cpy);
     }
@@ -104,18 +69,24 @@ static inline void heartbeat()
     time_prev = time_cpy;
 }
 
+static inline void microrl_in()
+{
+    // embed lib to you project
+    // Call init with ptr to microrl instance and print callback
+    microrl_init (prl, cli_print);
+    // Set callback for execute
+    microrl_set_execute_callback (prl, cli_execute);
+}
+
 int main (void)
 {
     init_p();
-    print_avr_version();
     print_user_info();
+    microrl_in();
 
     while (1) {
         heartbeat();
-
-        if (uart0_available()) {
-            month_info();
-        }
+        microrl_insert_char (prl, cli_get_char());
     }
 }
 
